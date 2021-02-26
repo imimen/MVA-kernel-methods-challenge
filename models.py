@@ -56,48 +56,6 @@ class kernelRidge:
         ytest = np.dot(self.weights, k)
         return ytest.transpose()
     
-
-class logistic_regression:
-    def __init__(self, tol=1-3, maxit=1000):
-        self.tol = tol
-        self.maxit = maxit
-        self.reg = None  # regression coefficients
-    
-    def L(self, phi, t):
-        y = sigmoid(phi@self.reg)
-        if np.any(y==0) or (np.any(1-y)==0):
-            return None
-        return (t.T@np.log(y)+(1-t).T@np.log(1-y))    
-        
-    def fit(self, x, t, alpha=0.01, beta=0.5):
-        phi = np.concatenate((np.ones((x.shape[0],1)), x), axis=1) 
-        self.reg= np.zeros(phi.shape[1])   # initialization of the regression weights 
-        L = self.L(phi, t)                 # initial loglikelihhod
-        it = 0
-        while (it<self.maxit):
-            y = sigmoid(phi@self.reg)
-            R = np.diag(np.diag(y*(1-y)[:,np.newaxis]))   # weighting matrix
-            hess = phi.T @ R @ phi                        # hessian matrix
-            if (np.linalg.det(hess)==0):
-                print("singular hessian matrix encountered")
-                break;
-            inv_hess = np.linalg.inv(hess)                      # inverse of the hessian matrix
-            self.reg = self.reg - inv_hess @ phi.T @ (y-t)      # update regression weights
-            L_new = self.L(phi, t)       # stopping criterion
-            if (L_new==None):
-                break;    
-            if (abs(L_new-L)<self.tol):
-                break;
-            L = L_new 
-            it = it+1  
-        return self.reg
-        
-    def predict(self, x):
-        X = np.concatenate((np.ones((x.shape[0],1)), x), axis=1)  # we add the intercept
-        pred = sigmoid(X@self.reg)
-        return np.array([ 0 if v<0.5 else 1 for v in pred])
-    
-    
     
 class KernelLogistic():
     def __init__(self):
