@@ -34,9 +34,10 @@ def save_file(ids, pred, name):
 
 
 def getVocab(x, k):
-    chars = []
-    for seq in x:
-        chars.extend(list(set(seq)))
+    # chars = []
+    # for seq in x:
+    #    chars.extend(list(set(seq)))
+    chars = ["A", "C", "G", "T"]
     chars = "".join(set(chars))
     vocab = ["".join(c) for c in product(chars, repeat=k)]
     return vocab
