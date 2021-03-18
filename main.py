@@ -5,7 +5,8 @@ import pandas as pd
 from utils import *
 from models import *
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.preprocessing import StandardScaler
 
 # global variables
 DATA_FOLDER = "machine-learning-with-kernel-methods-2021"
@@ -28,13 +29,22 @@ def main(args):
     index = []
     pred = []
     for i in range(N):
-        xtrain, ytrain, xtest, ids = load_file(i)
-
         feature_type = args.features.lower()
         if feature_type == "spectrum":
+            xtrain, ytrain, xtest, ids = load_file(i)
             xtrain = seqToSpec(xtrain, args.k)
             xte = seqToSpec(xtest, args.k)
-
+        
+        if feature_type == "bow":
+            xtrain, ytrain, xte, ids = load_bow(i)
+        if feature_type == "fusion":
+            xtrain1, ytrain, xte1, ids = load_bow(i)
+            xtrain2, ytrain2, xtest2, ids2 = load_file(i)
+            xtrain2 = seqToSpec(xtrain2, args.k)
+            xte2 = seqToSpec(xtest2, args.k)
+            xtrain = np.concatenate((xtrain1,xtrain2),axis=1)
+            xte = np.concatenate((xte1,xte2),axis=1)
+        """
         size = int(0.7 * xtrain.shape[0])
         xtr, xval, ytr, yval = (
             xtrain[:size],
@@ -42,10 +52,18 @@ def main(args):
             ytrain[:size],
             ytrain[size:],
         )
+        """
+        scaler = StandardScaler()
+        scaler.fit(xtrain)
+        xtrain = scaler.transform(xtrain)
+        xte = scaler.transform(xte)
+        xtr, xval, ytr, yval = train_test_split(
+                    xtrain, ytrain, test_size=0.7, random_state=42)
 
         _ = clf.fit(xtr, ytr)
         predval = clf.predict(xtr, xval)
         print(confusion_matrix(yval, predval))
+        print("accuracy is "+str(accuracy_score(yval, predval)))
         ytest = clf.predict(xtr, xte)
 
         index.extend(ids)
@@ -60,7 +78,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--features",
         type=str,
-        choices=["spectrum", "mismatch", "substring"],
+        choices=["spectrum", "mismatch", "substring","bow","fusion"],
         default="spectrum",
     )
     parser.add_argument(

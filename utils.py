@@ -27,6 +27,21 @@ def load_file(index):
     return xtrain, ytrain, xtest, ids
 
 
+def load_bow(index):
+    global DATA_FOLDER, TRAIN_FILE, TEST_FILE
+    df_train = pd.read_csv(os.path.join(DATA_FOLDER, TRAIN_FILE.format(str(index) + "_mat100")),
+                           header=None,sep='\s+')
+    df_label = pd.read_csv(os.path.join(DATA_FOLDER, LABEL_FILE.format(str(index))))
+    df_test = pd.read_csv(os.path.join(DATA_FOLDER, TEST_FILE.format(str(index) + "_mat100")),
+                          header=None,sep='\s+')
+    df_test_id = pd.read_csv(os.path.join(DATA_FOLDER, TEST_FILE.format(index)))
+    xtrain = df_train.to_numpy()
+    ytrain = df_label["Bound"].values
+    xtest = df_test.to_numpy()
+    ids = df_test_id["Id"].values
+    return xtrain, ytrain, xtest, ids
+
+
 def save_file(ids, pred, name):
     global DATA_FOLDER, PRED_FILE
     df_pred = pd.DataFrame({"Id": ids, "Bound": pred})
