@@ -18,6 +18,7 @@ N = 3  # number of datasets
 baselines = {
     "ridge": kernelRidge,
     "svm": kernelSVM,
+    "logistic": KernelLogistic,
 }
 
 
@@ -79,7 +80,7 @@ if __name__ == "__main__":
         "--features",
         type=str,
         choices=["spectrum", "mismatch", "substring","bow","fusion"],
-        default="spectrum",
+        default="bow",
     )
     parser.add_argument(
         "--baseline", type=str, choices=["ridge", "logistic", "svm"], default="ridge"
