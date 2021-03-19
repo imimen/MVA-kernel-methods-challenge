@@ -118,12 +118,59 @@ class kernelSVM:
 
 
 class KernelLogistic:
-    def __init__(self):
-        super().__init__()
+    def __init__(self, kernel_type="linear", d=2, sigma=1, c=0.1):
+        if kernel_type == "linear":
+            self.kernel = kernel_linear()
+        elif kernel_type == "gaussian":
+            self.kernel = kernel_gaussian(sigma)
+        elif kernel_type == "polynomial":
+            self.kernel = kernel_polynomial(d)
+        self.c = c
+        self.type = "_logistic_c_" + str(c) + self.kernel.type
+        self.tolerance = 1e-6
+        self.max_iter = 1000
+        
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+        
+    def solveWKRR(self, K, weights, y):
+        n = len(y)
+        m = K @ weights
+        u = np.array([y[i]*m[i,0] for i in range(n)])
+        P = np.diag(-self.sigmoid(-u))
+        W = np.diag(self.sigmoid(u)*self.sigmoid(-u))
+        z = np.array([m[i,0] - y[i]/(P[i,i]+1e-9) for i in range(n)]) 
+        return W, z
+    
+    def update(self, K, W, z):
+        Wsqrt = np.sqrt(W)
+        n = K.shape[0]
+        inv = np.linalg.inv(Wsqrt @ K @ Wsqrt + n*self.c*np.eye(n))
+        weights = Wsqrt @ inv @ Wsqrt @ z
+        return weights.T
 
-    def fit(self, x, y):
-        return 1
+    def fit(self, X, y):
+        y[y == 0] = -1
+        
+        K = compute_kernel_matrix(self.kernel, X, X).todense()
+   
+        weights = np.random.uniform(size=(K.shape[0],1))
+        prev = weights  
+        for _ in range(self.max_iter):
+            W, z = self.solveWKRR(K, weights, y)
+            weights = self.update(K, W, z)
+            
+            if np.sum(np.abs(prev - weights)) < self.tolerance:
+                break
+            prev = weights
+        self.weights = weights 
+        
+        return self.weights
 
-    def predict(self, x):
-        pred = 0
-        return pred
+    def predict(self, X, Xtest):
+        k = compute_kernel_matrix(self.kernel, X, Xtest).todense()
+        print(k.shape, self.weights.shape)
+        preds = k.T @ self.weights
+        preds = threshold(preds)  # labels are {0, 1}
+        ytest = list(np.array(preds).flat)
+        return ytest
