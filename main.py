@@ -53,13 +53,21 @@ def main(args):
             
         if feature_type == "fusion":
             xtrain1, ytrain, xte1, ids = load_bow(i)
-            xtrain3, ytrain3, xtest3, ids3 = load_file(i)
-            xtrain2 = seqToSpec(xtrain3, args.k)
-            xte2 = seqToSpec(xtest3, args.k)
-            xtrain_mis = mismatch(xtrain3,args.k,args.m)
-            xte_mis = mismatch(xtest3,args.k,args.m)
-            xtrain = np.concatenate((xtrain1,xtrain2,xtrain_mis),axis=1)
-            xte = np.concatenate((xte1,xte2,xte_mis),axis=1)
+            xtrain_ref, ytrain_ref, xtest_ref, ids_ref = load_file(i)
+            xtrain2 = seqToSpec(xtrain_ref, args.k)
+            xte2 = seqToSpec(xtest_ref, args.k)
+            xtrain_mis = mismatch(xtrain_ref,args.k,args.m)
+            xte_mis = mismatch(xtest_ref,args.k,args.m)
+            xtrain_fourier = get_tf(xtrain_ref,
+                                    args.order_of_fourier_kmers,
+                                    args.nb_of_fourier_coeffs)
+            xte_fourier = get_tf(xtest_ref,
+                                 args.order_of_fourier_kmers,
+                                 args.nb_of_fourier_coeffs)
+            xtrain = np.concatenate((xtrain1,xtrain2,
+                                     xtrain_mis,xtrain_fourier),axis=1)
+            xte = np.concatenate((xte1,xte2,xte_mis,
+                                 xte_fourier),axis=1)
         """
         size = int(0.7 * xtrain.shape[0])
         xtr, xval, ytr, yval = (
@@ -74,18 +82,21 @@ def main(args):
         xtrain = scaler.transform(xtrain)
         xte = scaler.transform(xte)
         xtr, xval, ytr, yval = train_test_split(
-                    xtrain, ytrain, test_size=0.7, random_state=42)
+                    xtrain, ytrain, test_size=0.2, random_state=42)
 
         _ = clf.fit(xtr, ytr)
         predval = clf.predict(xtr, xval)
         print(confusion_matrix(yval, predval))
         print("accuracy is "+str(accuracy_score(yval, predval)))
         ytest = clf.predict(xtr, xte)
-
+        
+        print("Computing the results for submission")
+        clf.fit(xtrain, ytrain)
+        pred_sub = clf.predict(xtrain, xte)
         index.extend(ids)
         pred.extend(ytest)
 
-    name = args.features.lower() + "_k_" + str(args.k) + clf.type
+    name = args.features.lower() + "_k_" + str(args.k) + clf.type + "_fusion_strategy"
     save_file(index, pred, name=name)
 
 
