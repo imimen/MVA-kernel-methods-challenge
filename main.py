@@ -38,13 +38,28 @@ def main(args):
         
         if feature_type == "bow":
             xtrain, ytrain, xte, ids = load_bow(i)
+            
+        if feature_type == "mismatch":
+            xtrain, ytrain, xtest, ids = load_file(i)
+            xtrain = mismatch(xtrain,args.k,args.m)
+            xte = mismatch(xtest,args.k,args.m)
+        
+        if feature_type == "fourier":
+            xtrain, ytrain, xtest, ids = load_file(i)
+            xtrain = get_tf(xtrain,args.order_of_fourier_kmers,
+                            args.nb_of_fourier_coeffs)
+            xte = get_tf(xtest,args.order_of_fourier_kmers,
+                         args.nb_of_fourier_coeffs)
+            
         if feature_type == "fusion":
             xtrain1, ytrain, xte1, ids = load_bow(i)
-            xtrain2, ytrain2, xtest2, ids2 = load_file(i)
-            xtrain2 = seqToSpec(xtrain2, args.k)
-            xte2 = seqToSpec(xtest2, args.k)
-            xtrain = np.concatenate((xtrain1,xtrain2),axis=1)
-            xte = np.concatenate((xte1,xte2),axis=1)
+            xtrain3, ytrain3, xtest3, ids3 = load_file(i)
+            xtrain2 = seqToSpec(xtrain3, args.k)
+            xte2 = seqToSpec(xtest3, args.k)
+            xtrain_mis = mismatch(xtrain3,args.k,args.m)
+            xte_mis = mismatch(xtest3,args.k,args.m)
+            xtrain = np.concatenate((xtrain1,xtrain2,xtrain_mis),axis=1)
+            xte = np.concatenate((xte1,xte2,xte_mis),axis=1)
         """
         size = int(0.7 * xtrain.shape[0])
         xtr, xval, ytr, yval = (
@@ -79,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--features",
         type=str,
-        choices=["spectrum", "mismatch", "substring","bow","fusion"],
+        choices=["spectrum", "mismatch", "substring","bow","fourier","fusion"],
         default="bow",
     )
     parser.add_argument(
@@ -92,8 +107,11 @@ if __name__ == "__main__":
         default="linear",
     )
     parser.add_argument("--k", type=int, default=3)
+    parser.add_argument("--m", type=int, default=1)
     parser.add_argument("--c", type=float, default=0.01)
     parser.add_argument("--sigma", type=float, default=1)
     parser.add_argument("--d", type=int, default=2)
+    parser.add_argument("--nb_of_fourier_coeffs",type=int,default=5)
+    parser.add_argument("--order_of_fourier_kmers",type=int,default=1)
     args = parser.parse_args()
     main(args)
