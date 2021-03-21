@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
 import cvxopt as co
-from numpy.fft import rfft, rfftfreq
 
 
 # UTILS
@@ -49,16 +48,11 @@ class kernel_gaussian:
     def __call__(self, x1, x2):
         return np.exp(-np.linalg.norm(x1 - x2) / (2 * self.sigma ** 2))
 
-
+    
 # BASELINES
 class kernelRidge:
-    def __init__(self, kernel_type="linear", d=2, sigma=1, c=0.01):
-        if kernel_type == "linear":
-            self.kernel = kernel_linear()
-        elif kernel_type == "gaussian":
-            self.kernel = kernel_gaussian(sigma)
-        elif kernel_type == "polynomial":
-            self.kernel = kernel_polynomial(d)
+    def __init__(self, kernel, c=0.01):
+        self.kernel = kernel
         self.type = "_ridge_c_" + str(c) + self.kernel.type
         self.c = c
 
@@ -76,13 +70,8 @@ class kernelRidge:
 
 
 class kernelSVM:
-    def __init__(self, kernel_type="gaussian", d=2, sigma=1, c=0.01):
-        if kernel_type == "linear":
-            self.kernel = kernel_linear()
-        elif kernel_type == "gaussian":
-            self.kernel = kernel_gaussian(sigma)
-        elif kernel_type == "polynomial":
-            self.kernel = kernel_polynomial(d)
+    def __init__(self, kernel, c=0.01):
+        self.kernel = kernel
         self.c = c
         self.type = "_svm_c_" + str(c) + self.kernel.type
 
@@ -119,13 +108,8 @@ class kernelSVM:
 
 
 class KernelLogistic:
-    def __init__(self, kernel_type="linear", d=2, sigma=1, c=0.1):
-        if kernel_type == "linear":
-            self.kernel = kernel_linear()
-        elif kernel_type == "gaussian":
-            self.kernel = kernel_gaussian(sigma)
-        elif kernel_type == "polynomial":
-            self.kernel = kernel_polynomial(d)
+    def __init__(self, kernel, c=0.1):
+        self.kernel = kernel
         self.c = c
         self.type = "_logistic_c_" + str(c) + self.kernel.type
         self.tolerance = 1e-6
@@ -175,3 +159,32 @@ class KernelLogistic:
         preds = threshold(preds)  # labels are {0, 1}
         ytest = list(np.array(preds).flat)
         return ytest
+    
+    
+# BASELINE MAKER:
+
+baselines = {
+    "ridge": kernelRidge,
+    "svm": kernelSVM,
+    "logistic": KernelLogistic,
+}
+
+class Baseline:
+    def __init__(self, baseline_type, kernel_type, d=2, sigma=0.1, c=0.01):
+        
+        if kernel_type == "linear":
+            kernel = kernel_linear()
+        elif kernel_type == "polynomial":
+            kernel = kernel_polynomial(d)
+        elif kernel_type == "gaussian":
+            kernel = kernel_gaussian(sigma)
+        
+        self.baseline = baselines[baseline_type](kernel, c)
+        
+        self.type = self.baseline.type
+
+    def fit(self, X, y):
+        return self.baseline.fit(X, y)
+    
+    def predict(self, X, Xtest):
+        return self.baseline.predict(X, Xtest)

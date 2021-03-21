@@ -15,6 +15,8 @@ LABEL_FILE = "Ytr{}.csv"
 TEST_FILE = "Xte{}.csv"
 N = 3  # number of datasets
 
+HIST_FILE = "results-history.txt"
+
 baselines = {
     "ridge": kernelRidge,
     "svm": kernelSVM,
@@ -23,81 +25,55 @@ baselines = {
 
 
 def main(args):
-    clf = baselines[args.baseline.lower()](
-        kernel_type=args.kernel.lower(), d=args.d, sigma=args.sigma, c=args.c
+
+    feature_type = args.features.lower()
+    fmaker = feature_extractor(
+        feature_type=feature_type,
+        k=args.k,
+        m=args.m,
+        lmbda=args.lmbda,
+        order_of_fourier_kmers=args.order_of_fourier_kmers,
+        nb_of_fourier_coeffs=args.order_of_fourier_kmers,
     )
 
+    kernel_type = args.kernel.lower() # if feature_type == "bow" else "linear"
+    
+    clf = Baseline(
+        baseline_type=args.baseline.lower(), 
+        kernel_type=kernel_type, 
+        d=args.d, 
+        sigma=args.sigma, 
+        c=args.c)
+    
     index = []
     pred = []
+    accs = []
     for i in range(N):
-        feature_type = args.features.lower()
-        if feature_type == "spectrum":
-            xtrain, ytrain, xtest, ids = load_file(i)
-            xtrain = seqToSpec(xtrain, args.k)
-            xte = seqToSpec(xtest, args.k)
-        
-        if feature_type == "bow":
-            xtrain, ytrain, xte, ids = load_bow(i)
-            
-        if feature_type == "mismatch":
-            xtrain, ytrain, xtest, ids = load_file(i)
-            xtrain = mismatch(xtrain,args.k,args.m)
-            xte = mismatch(xtest,args.k,args.m)
-        
-        if feature_type == "fourier":
-            xtrain, ytrain, xtest, ids = load_file(i)
-            xtrain = get_tf(xtrain,args.order_of_fourier_kmers,
-                            args.nb_of_fourier_coeffs)
-            xte = get_tf(xtest,args.order_of_fourier_kmers,
-                         args.nb_of_fourier_coeffs)
-            
-        if feature_type == "fusion":
-            xtrain1, ytrain, xte1, ids = load_bow(i)
-            xtrain_ref, ytrain_ref, xtest_ref, ids_ref = load_file(i)
-            xtrain2 = seqToSpec(xtrain_ref, args.k)
-            xte2 = seqToSpec(xtest_ref, args.k)
-            xtrain_mis = mismatch(xtrain_ref,args.k,args.m)
-            xte_mis = mismatch(xtest_ref,args.k,args.m)
-            xtrain_fourier = get_tf(xtrain_ref,
-                                    args.order_of_fourier_kmers,
-                                    args.nb_of_fourier_coeffs)
-            xte_fourier = get_tf(xtest_ref,
-                                 args.order_of_fourier_kmers,
-                                 args.nb_of_fourier_coeffs)
-            xtrain = np.concatenate((xtrain1,xtrain2,
-                                     xtrain_mis,xtrain_fourier),axis=1)
-            xte = np.concatenate((xte1,xte2,xte_mis,
-                                 xte_fourier),axis=1)
-        """
-        size = int(0.7 * xtrain.shape[0])
-        xtr, xval, ytr, yval = (
-            xtrain[:size],
-            xtrain[size:],
-            ytrain[:size],
-            ytrain[size:],
-        )
-        """
+        xtrain, ytrain, xte, ids = fmaker(i)
+
         scaler = StandardScaler()
         scaler.fit(xtrain)
         xtrain = scaler.transform(xtrain)
         xte = scaler.transform(xte)
         xtr, xval, ytr, yval = train_test_split(
-                    xtrain, ytrain, test_size=0.2, random_state=42)
+            xtrain, ytrain, test_size=0.3, random_state=42
+        )
 
         _ = clf.fit(xtr, ytr)
         predval = clf.predict(xtr, xval)
         print(confusion_matrix(yval, predval))
-        print("accuracy is "+str(accuracy_score(yval, predval)))
-        ytest = clf.predict(xtr, xte)
         
-        print("Computing the results for submission")
-        clf.fit(xtrain, ytrain)
-        pred_sub = clf.predict(xtrain, xte)
+        acc = accuracy_score(yval, predval)
+        print("accuracy is " + str(acc))
+        ytest = clf.predict(xtr, xte)
+
         index.extend(ids)
         pred.extend(ytest)
-
-    name = args.features.lower() + "_k_" + str(args.k) + clf.type + "_fusion_strategy"
+        accs.append(acc)
+        
+    name = args.features.lower() + "_k_" + str(args.k) + clf.type
     save_file(index, pred, name=name)
+    save_results(name, accs, sum(accs)/N)
 
 
 if __name__ == "__main__":
@@ -105,7 +81,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--features",
         type=str,
-        choices=["spectrum", "mismatch", "substring","bow","fourier","fusion"],
+        choices=["spectrum", "mismatch", "substring", "bow", "fourier", "fusion"],
         default="bow",
     )
     parser.add_argument(
@@ -119,10 +95,11 @@ if __name__ == "__main__":
     )
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--m", type=int, default=1)
+    parser.add_argument("--lmbda", type=float, default=2.0)
     parser.add_argument("--c", type=float, default=0.01)
     parser.add_argument("--sigma", type=float, default=1)
     parser.add_argument("--d", type=int, default=2)
-    parser.add_argument("--nb_of_fourier_coeffs",type=int,default=5)
-    parser.add_argument("--order_of_fourier_kmers",type=int,default=1)
+    parser.add_argument("--nb_of_fourier_coeffs", type=int, default=5)
+    parser.add_argument("--order_of_fourier_kmers", type=int, default=1)
     args = parser.parse_args()
     main(args)
