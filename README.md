@@ -31,22 +31,18 @@ pip install -r requirements.txt
 ```
 
 ### running a session
-In order to test the different baselines we have implemented so far, you need to :
-```
-python main.py --args $ARGS
-```
-Where ARGS refer to the set of appropriate parameters (depending on the chosen features, kernel and classification baseline) including :
+In order to test the different baselines we have implemented so far, you need to run the ***main.py*** script and specify the appropriate parameters (depending on the chosen features, kernel and classification baseline) among :
 
-- features: "spectrum", "mismatch", "bow", "fourier", "fusion" (the possible choices)
-- baselines : "ridge", "logistic", "svm" (the possible choices)
-- kernels : "linear", "polynomial", "gaussian" (the possible choices)
-- k : length of k-mers (fixed length subsequences)
-- m : number of allowed mismatches
-- nb_of_fourier_coeffs : number of coefficients to use for the fourier features
-- order_of_fourier_kmers :  length of kmers used for the fourier features
-- c : regularization parameter for the baseline
-- sigma : variance of the gaussian kernel
-- d : degree of polynomial kernel 
+- --features: "spectrum", "mismatch", "bow", "fourier", "fusion" (the possible choices)
+- --baselines : "ridge", "logistic", "svm" (the possible choices)
+- --kernels : "linear", "polynomial", "gaussian" (the possible choices)
+- --k : length of k-mers (fixed length subsequences)
+- --m : number of allowed mismatches
+- --nb_of_fourier_coeffs : number of coefficients to use for the fourier features
+- --order_of_fourier_kmers :  length of kmers used for the fourier features
+- --c : regularization parameter for the baseline
+- --sigma : variance of the gaussian kernel
+- --d : degree of polynomial kernel 
     
 Please make sure to put the different scripts ***models.py***, ***utils.py*** and ***main.py*** as well as the the dataset: ***/machine-learning-with-kernel-methods-2021*** in the same folder. If you want to change the path to the dataset, please make sure to update the global variable ***DATA_FOLDER*** in ***utils.py***.
 
