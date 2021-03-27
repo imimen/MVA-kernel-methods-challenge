@@ -23,7 +23,7 @@ In this repository, we included in ***models.py*** our implementation for the ba
 
 1/ clone the repository :
 ```
-pip install -r requirements.txt
+git clone https://github.com/imimen/kernel-methods-challenge.git && cd kernel-methods-challenge
 ```
 2/ install the required libraries:
 ```
