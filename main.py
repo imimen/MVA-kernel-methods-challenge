@@ -48,6 +48,7 @@ def main(args):
     index = []
     pred = []
     accs = []
+    print(f"Parameters of the model : \nfeatures : {args.features.lower()} \nbaseline+kernel : {clf.type}")
     for i in range(N):
         xtrain, ytrain, xte, ids = fmaker(i)
 
@@ -82,10 +83,10 @@ if __name__ == "__main__":
         "--features",
         type=str,
         choices=["spectrum", "mismatch", "substring", "bow", "fourier", "fusion"],
-        default="bow",
+        default="spectrum",
     )
     parser.add_argument(
-        "--baseline", type=str, choices=["ridge", "logistic", "svm"], default="ridge"
+        "--baseline", type=str, choices=["ridge", "logistic", "svm"], default="svm"
     )
     parser.add_argument(
         "--kernel",
@@ -93,10 +94,10 @@ if __name__ == "__main__":
         choices=["linear", "polynomial", "gaussian"],
         default="linear",
     )
-    parser.add_argument("--k", type=int, default=3)
+    parser.add_argument("--k", type=int, default=5)
     parser.add_argument("--m", type=int, default=1)
     parser.add_argument("--lmbda", type=float, default=2.0)
-    parser.add_argument("--c", type=float, default=0.01)
+    parser.add_argument("--c", type=float, default=0.0001)
     parser.add_argument("--sigma", type=float, default=1)
     parser.add_argument("--d", type=int, default=2)
     parser.add_argument("--nb_of_fourier_coeffs", type=int, default=5)
