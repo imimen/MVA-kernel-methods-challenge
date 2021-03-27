@@ -57,7 +57,10 @@ def load_bow(index):
 def save_file(ids, pred, name):
     global RES_FOLDER, PRED_FILE
     df_pred = pd.DataFrame({"Id": ids, "Bound": pred})
+    df_pred = df_pred[['Id', 'Bound']].copy()
+    df_pred = df_pred.set_index('Id')
     df_pred.to_csv(os.path.join(RES_FOLDER, PRED_FILE.format(name)))
+    print(f"results saved to : {os.path.join(RES_FOLDER, PRED_FILE.format(name))}")
     
     
 def save_results(model, results, mean):
@@ -188,7 +191,7 @@ class to_fourier:
         xte = self.getFeatures(xtest)
         return xtrain, xte
 
-
+# "to_substring" not finalised yet
 class to_substring:
     def __init__(self, k=3, lmbda=2):
         self.type = f"_substring_{k}_{lmbda}"
