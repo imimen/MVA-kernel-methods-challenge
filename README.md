@@ -16,10 +16,22 @@ For further details, here is the link for the data challenge : [Kaggle challenge
 
 ### Implemented baselines:
 
-In this repository, we included in ***models.py*** our implementation for the basic kernels: **linear, polynomial and gaussian** along with some classification baselines: **kernel linear regression**, **logistic regression** and **SVM**. Provided that we are dealing with a classification task related to **DNA sequences**, we explored different strategies for extracting features from this particular data structure. Precisely, we worked with **spectral**, **mismatch** and **fourier features**, besides the provided Bag of word based representations. All the utils related to the preprocessing of the data figures in ***utils.py***.
+In this repository, we included in ***models.py*** our implementation for the basic kernels: **linear**, **polynomial** and **gaussian** along with some classification baselines: **kernel linear regression**, **logistic regression** and **SVM**. Provided that we are dealing with a classification task related to **DNA sequences**, we explored different strategies for extracting features from this particular data structure. Precisely, we worked with **spectral**, **mismatch** and **fourier features**, besides the provided Bag of word based representations. All the utils related to the preprocessing of the data is included in ***utils.py***.
 
-In order to test the different baselines we have implemented so far, you need to run the following script:
+### Setup instructions
 
+
+1/ clone the repository :
+```
+pip install -r requirements.txt
+```
+2/ install the required libraries:
+```
+pip install -r requirements.txt
+```
+
+### running a session
+In order to test the different baselines we have implemented so far, you need to :
 ```
 python main.py --args $ARGS
 ```
@@ -36,6 +48,6 @@ Where ARGS refer to the set of appropriate parameters (depending on the chosen f
 - sigma : variance of the gaussian kernel
 - d : degree of polynomial kernel 
     
-Please make sure to put the different scripts ***models.py***, ***utils.py*** and ***main.py*** as well as the the dataset: ***/machine-learning-with-kernel-methods-2021*** in the same folder.
+Please make sure to put the different scripts ***models.py***, ***utils.py*** and ***main.py*** as well as the the dataset: ***/machine-learning-with-kernel-methods-2021*** in the same folder. If you want to change the path to the dataset, please make sure to update the global variable ***DATA_FOLDER*** in ***utils.py***.
 
 
